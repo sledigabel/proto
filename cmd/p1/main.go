@@ -67,9 +67,9 @@ func validateRequest(req map[string]interface{}) bool {
 		return false
 	}
 
-	if float64(int64(req["number"].(float64))) != req["number"].(float64) {
-		return false
-	}
+	// if float64(int64(req["number"].(float64))) != req["number"].(float64) {
+	// 	return false
+	// }
 
 	return true
 }
@@ -101,8 +101,14 @@ func HandleRequest(conn net.Conn) error {
 			return errors.New("invalid input")
 		}
 
-		req := Request{Method: orig["method"].(string), Number: int64(orig["number"].(float64))}
-		resp := Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
+		var resp Response
+		if float64(int64(orig["number"].(float64))) != orig["number"].(float64) {
+			resp = Response{Method: orig["method"].(string), Prime: false}
+		} else {
+			req := Request{Method: orig["method"].(string), Number: int64(orig["number"].(float64))}
+			resp = Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
+		}
+
 		log.Println("Writing response", resp)
 		if data, err := json.Marshal(resp); err != nil {
 			return errors.New("could not marshall")
