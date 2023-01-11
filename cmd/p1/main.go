@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
@@ -46,7 +46,12 @@ func HandleRequest(conn net.Conn) error {
 
 	log.Println("Got a new connection from", conn.RemoteAddr().String())
 
-	data, err := ioutil.ReadAll(conn)
+	// data, err := ioutil.ReadAll(conn)
+
+	scanner := bufio.NewScanner(conn)
+	scanner.Scan()
+	data := scanner.Bytes()
+	err := scanner.Err()
 	log.Println("Got some new data", string(data))
 	if err != nil {
 		log.Println("error while reading in", err)
