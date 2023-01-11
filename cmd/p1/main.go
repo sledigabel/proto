@@ -33,7 +33,7 @@ func parseIPAndPort(arg string) (string, int, error) {
 
 type Request struct {
 	Method string `json:"method,required"`
-	Number string `json:"number,required"`
+	Number int64  `json:"number,required"`
 }
 
 type Response struct {
@@ -61,20 +61,12 @@ func HandleRequest(conn net.Conn) error {
 			_, _ = conn.Write([]byte("malformed"))
 			return err
 		}
-		log.Println(req.Method, req.Number)
 
-		if req.Method != "isPrime" || req.Number == "" {
+		if req.Method != "isPrime" {
 			_, _ = conn.Write([]byte("malformed"))
 			return errors.New("method is not IsPrime")
 		}
-
-		num, err := strconv.ParseInt(req.Number, 10, 64)
-		if err != nil {
-			_, _ = conn.Write([]byte("malformed"))
-			return fmt.Errorf("cannot convert number: %w", err)
-		}
-
-		resp := Response{Method: req.Method, Prime: big.NewInt(num).ProbablyPrime(0)}
+		resp := Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
 
 		log.Println("Writing response", resp)
 		if data, err := json.Marshal(resp); err != nil {
