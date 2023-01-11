@@ -49,42 +49,38 @@ func HandleRequest(conn net.Conn) error {
 	// data, err := ioutil.ReadAll(conn)
 
 	scanner := bufio.NewScanner(conn)
-	scanner.Scan()
-	data := scanner.Bytes()
-	err := scanner.Err()
-	log.Println("Got some new data", string(data))
-	if err != nil {
-		log.Println("error while reading in", err)
-		return err
-	}
-
-	// now we need to unmarshall it
-	var req Request
-	if err = json.Unmarshal(data, &req); err != nil {
-		_, _ = conn.Write([]byte("malformed"))
-		return err
-	}
-
-	if req.Method != "isPrime" {
-		_, _ = conn.Write([]byte("malformed"))
-		return errors.New("method is not IsPrime")
-	}
-
-	log.Println(req)
-
-	resp := Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
-
-	// now need to write the data back
-	log.Println("Writing response", resp)
-	if data, err := json.Marshal(resp); err != nil {
-		return errors.New("could not marshall")
-	} else {
-		if _, err = conn.Write(data); err != nil {
-			log.Println("Could not send back data")
+	for scanner.Scan() {
+		data := scanner.Bytes()
+		if err := scanner.Err(); err != nil {
 			return err
 		}
-		log.Println("Sending", string(data))
+		log.Println("Got some new data", string(data))
+
+		var req Request
+		if err := json.Unmarshal(data, &req); err != nil {
+			_, _ = conn.Write([]byte("malformed"))
+			return err
+		}
+
+		if req.Method != "isPrime" {
+			_, _ = conn.Write([]byte("malformed"))
+			return errors.New("method is not IsPrime")
+		}
+		resp := Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
+
+		log.Println("Writing response", resp)
+		if data, err := json.Marshal(resp); err != nil {
+			return errors.New("could not marshall")
+		} else {
+			if _, err = conn.Write(data); err != nil {
+				log.Println("Could not send back data")
+				return err
+			}
+			log.Println("Sending", string(data))
+		}
+
 	}
+
 	return nil
 }
 
