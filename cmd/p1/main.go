@@ -33,12 +33,45 @@ func parseIPAndPort(arg string) (string, int, error) {
 
 type Request struct {
 	Method string `json:"method"`
-	Number *int64 `json:"number"`
+	Number int64  `json:"number"`
 }
 
 type Response struct {
 	Method string `json:"method"`
 	Prime  bool   `json:"prime"`
+}
+
+func validateRequest(req map[string]interface{}) bool {
+	if _, ok := req["method"]; !ok {
+		log.Println("Method missing")
+		return false
+	}
+	if _, ok := req["number"]; !ok {
+		log.Println("Number missing")
+		return false
+	}
+	switch req["method"].(type) {
+	case string:
+	default:
+		log.Println("Method is not string")
+		return false
+	}
+
+	if _, ok := req["method"].(string); !ok {
+		log.Println("method is not string")
+		return false
+	}
+
+	if _, ok := req["number"].(float64); !ok {
+		log.Println("Number is not int64")
+		return false
+	}
+
+	if float64(int64(req["number"].(float64))) != req["number"].(float64) {
+		return false
+	}
+
+	return true
 }
 
 func HandleRequest(conn net.Conn) error {
@@ -56,18 +89,20 @@ func HandleRequest(conn net.Conn) error {
 		}
 		log.Println("Got some new data", string(data))
 
-		var req Request
-		if err := json.Unmarshal(data, &req); err != nil {
+		var orig map[string]interface{}
+		if err := json.Unmarshal(data, &orig); err != nil {
 			_, _ = conn.Write([]byte("malformed"))
 			return err
 		}
 
-		if req.Method != "isPrime" || req.Number == nil {
+		if !validateRequest(orig) {
+			log.Println("Invalid input")
 			_, _ = conn.Write([]byte("malformed"))
-			return errors.New("method is not IsPrime")
+			return errors.New("invalid input")
 		}
-		resp := Response{Method: req.Method, Prime: big.NewInt(*req.Number).ProbablyPrime(0)}
 
+		req := Request{Method: orig["method"].(string), Number: int64(orig["number"].(float64))}
+		resp := Response{Method: req.Method, Prime: big.NewInt(req.Number).ProbablyPrime(0)}
 		log.Println("Writing response", resp)
 		if data, err := json.Marshal(resp); err != nil {
 			return errors.New("could not marshall")
