@@ -83,7 +83,7 @@ func HandleRequest(conn net.Conn) error {
 			log.Println("Could not send back data")
 			return err
 		}
-		log.Println("Sending")
+		log.Println("Sending", string(data))
 	}
 	return nil
 }
