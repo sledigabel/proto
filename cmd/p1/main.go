@@ -72,6 +72,8 @@ func HandleRequest(conn net.Conn) error {
 		if data, err := json.Marshal(resp); err != nil {
 			return errors.New("could not marshall")
 		} else {
+			// adding CR in the end
+			data = append(data, byte(10))
 			if _, err = conn.Write(data); err != nil {
 				log.Println("Could not send back data")
 				return err
