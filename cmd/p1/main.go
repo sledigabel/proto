@@ -32,8 +32,8 @@ func parseIPAndPort(arg string) (string, int, error) {
 }
 
 type Request struct {
-	Method string `json:"method"`
-	Number int64  `json:"number"`
+	Method string `json:"method,required"`
+	Number int64  `json:"number,required"`
 }
 
 type Response struct {
