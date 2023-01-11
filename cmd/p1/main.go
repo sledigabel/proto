@@ -32,8 +32,8 @@ func parseIPAndPort(arg string) (string, int, error) {
 }
 
 type Request struct {
-	Method string `json:"method,required"`
-	Number int64  `json:"number,required"`
+	Method string `json:"method"`
+	Number int64  `json:"number"`
 }
 
 type Response struct {
@@ -62,7 +62,7 @@ func HandleRequest(conn net.Conn) error {
 			return err
 		}
 
-		if req.Method != "isPrime" {
+		if req.Method != "isPrime" || req.Number == 0 {
 			_, _ = conn.Write([]byte("malformed"))
 			return errors.New("method is not IsPrime")
 		}
