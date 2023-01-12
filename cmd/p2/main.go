@@ -51,6 +51,9 @@ func readMessage(conn net.Conn) (*Message, error) {
 	if _, err := conn.Read(arg2); err != nil {
 		return nil, err
 	}
+	log.Println("Raw data for arg1 and arg2:")
+	log.Println(arg1)
+	log.Println(arg2)
 
 	var arg1Value, arg2Value int32
 	if err := binary.Read(bytes.NewBuffer(arg1), binary.BigEndian, &arg1Value); err != nil {
