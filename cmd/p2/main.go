@@ -98,6 +98,7 @@ func HandleRequest(conn net.Conn) error {
 			}
 			log.Println("Writing results:", res)
 			binary.Write(conn, binary.BigEndian, res)
+			return nil
 		}
 	}
 }
