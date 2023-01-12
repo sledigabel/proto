@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -38,35 +37,30 @@ type Message struct {
 
 func readMessage(conn net.Conn) (*Message, error) {
 	// read Message type
-	messageType := make([]byte, 1)
-	arg1 := make([]byte, 4)
-	arg2 := make([]byte, 4)
+	messageBytes := make([]byte, 9)
+	// arg1 := make([]byte, 4)
+	// arg2 := make([]byte, 4)
 
-	if _, err := conn.Read(messageType); err != nil {
+	if _, err := conn.Read(messageBytes); err != nil {
 		return nil, err
 	}
-	if _, err := conn.Read(arg1); err != nil {
-		return nil, err
-	}
-	if _, err := conn.Read(arg2); err != nil {
-		return nil, err
-	}
-	log.Println("Raw data for arg1 and arg2:")
-	log.Println(arg1)
-	log.Println(arg2)
 
-	var arg1Value, arg2Value int32
-	if err := binary.Read(bytes.NewBuffer(arg1), binary.BigEndian, &arg1Value); err != nil {
-		return nil, err
-	}
-	if err := binary.Read(bytes.NewBuffer(arg2), binary.BigEndian, &arg2Value); err != nil {
-		return nil, err
-	}
+	log.Println("Raw data:")
+	log.Println(messageBytes)
+	// log.Println(arg2)
+
+	// var arg1Value, arg2Value int32
+	// if err := binary.Read(bytes.NewBuffer(arg1), binary.BigEndian, &arg1Value); err != nil {
+	// 	return nil, err
+	// }
+	// if err := binary.Read(bytes.NewBuffer(arg2), binary.BigEndian, &arg2Value); err != nil {
+	// 	return nil, err
+	// }
 
 	message := Message{
-		Type: string(messageType),
-		Arg1: arg1Value,
-		Arg2: arg2Value,
+		// Type: string(messageType),
+		// Arg1: arg1Value,
+		// Arg2: arg2Value,
 	}
 	log.Println("Read message:", message)
 	return &message, nil
