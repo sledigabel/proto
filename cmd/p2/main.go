@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -47,24 +48,25 @@ func readMessage(conn net.Conn) (*Message, error) {
 	if n, err = io.ReadFull(conn, messageBytes); err != nil {
 		return nil, err
 	}
+
 	log.Println("Read", n, "bytes")
 
 	log.Println("Raw data:")
 	log.Println(messageBytes)
 	// log.Println(arg2)
 
-	// var arg1Value, arg2Value int32
-	// if err := binary.Read(bytes.NewBuffer(arg1), binary.BigEndian, &arg1Value); err != nil {
-	// 	return nil, err
-	// }
-	// if err := binary.Read(bytes.NewBuffer(arg2), binary.BigEndian, &arg2Value); err != nil {
-	// 	return nil, err
-	// }
+	var arg1Value, arg2Value int32
+	if err := binary.Read(bytes.NewBuffer(messageBytes[1:5]), binary.BigEndian, &arg1Value); err != nil {
+		return nil, err
+	}
+	if err := binary.Read(bytes.NewBuffer(messageBytes[5:]), binary.BigEndian, &arg2Value); err != nil {
+		return nil, err
+	}
 
 	message := Message{
-		// Type: string(messageType),
-		// Arg1: arg1Value,
-		// Arg2: arg2Value,
+		Type: string(messageBytes[0]),
+		Arg1: arg1Value,
+		Arg2: arg2Value,
 	}
 	log.Println("Read message:", message)
 	return &message, nil
