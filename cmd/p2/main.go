@@ -84,11 +84,11 @@ func HandleRequest(conn net.Conn) error {
 		case "I":
 			previous = append(previous, message)
 		case "Q":
-			var res, sum, total int32
+			var res, sum, total int64
 			for _, prev := range previous {
 				// for each previous, check whether the timestamp in within
 				if message.Arg1 <= prev.Arg1 && prev.Arg1 <= message.Arg2 {
-					sum += prev.Arg2
+					sum += int64(prev.Arg2)
 					total += 1
 				}
 			}
