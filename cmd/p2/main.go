@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -43,7 +44,7 @@ func readMessage(conn net.Conn) (*Message, error) {
 
 	var n int
 	var err error
-	if n, err = conn.Read(messageBytes); err != nil {
+	if n, err = io.ReadFull(conn, messageBytes); err != nil {
 		return nil, err
 	}
 	log.Println("Read", n, "bytes")
