@@ -42,7 +42,8 @@ func readMessage(conn net.Conn) (*Message, error) {
 	// arg2 := make([]byte, 4)
 
 	var n int
-	if n, err := conn.Read(messageBytes); err != nil {
+	var err error
+	if n, err = conn.Read(messageBytes); err != nil {
 		return nil, err
 	}
 	log.Println("Read", n, "bytes")
