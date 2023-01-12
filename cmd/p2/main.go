@@ -75,7 +75,6 @@ func readMessage(conn net.Conn) (*Message, error) {
 func HandleRequest(conn net.Conn) error {
 	var previous []*Message
 
-	defer conn.Close()
 	for {
 		message, err := readMessage(conn)
 		if err != nil {
@@ -97,9 +96,7 @@ func HandleRequest(conn net.Conn) error {
 			res = sum / total
 			log.Println("Writing results:", res)
 			binary.Write(conn, binary.BigEndian, res)
-			return nil
 		}
-
 	}
 }
 
