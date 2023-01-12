@@ -97,7 +97,7 @@ func HandleRequest(conn net.Conn) error {
 				res = sum / total
 			}
 			log.Println("Writing results:", res)
-			binary.Write(conn, binary.BigEndian, res)
+			binary.Write(conn, binary.BigEndian, int32(res))
 			// return nil
 		}
 	}
