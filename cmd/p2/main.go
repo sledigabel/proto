@@ -65,6 +65,7 @@ func readMessage(conn net.Conn) (*Message, error) {
 		Arg1: arg1Value,
 		Arg2: arg2Value,
 	}
+	log.Println("Read message:", message)
 	return &message, nil
 }
 
