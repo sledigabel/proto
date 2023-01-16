@@ -44,12 +44,26 @@ func HandleRequest(conn net.Conn) error {
 	return nil
 }
 
-func HandleResponse(buf []byte, addr net.Addr) error {
+func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[string]string) error {
 	log.Println("Received:", string(buf))
+	str := string(buf)
+	if strings.ContainsRune(str, '=') {
+		// this is an insert
+		spl := strings.SplitN(str, "=", 2)
+		log.Println("Split into", spl)
+		dict[spl[0]] = dict[spl[1]]
+	} else {
+		// this is a retrieve
+		if val, ok := dict[str]; ok {
+			// it's in, respond the value
+			server.WriteTo([]byte(fmt.Sprintf("%s=%s", str, val)), addr)
+		}
+	}
 	return nil
 }
 
 func ListenServer(ip string, port int) (err error) {
+	var dict map[string]string
 	// server, err := net.Listen("udp", fmt.Sprintf("%s:%d", ip, port))
 	server, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
@@ -67,7 +81,7 @@ func ListenServer(ip string, port int) (err error) {
 		}
 
 		go func() {
-			if err := HandleResponse(buf, addr); err != nil {
+			if err := HandleResponse(server, buf, addr, dict); err != nil {
 				log.Println(err)
 			}
 		}()
