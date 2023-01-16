@@ -113,6 +113,8 @@ func HandleRequest(user *User, room *Room) error {
 			user.Conn.Close()
 		}
 		user.Name = username
+	} else {
+		return errors.New("could not get username")
 	}
 
 	// user accepted, make the announcement
