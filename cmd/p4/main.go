@@ -49,11 +49,13 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 	str := string(buf)
 	if strings.ContainsRune(str, '=') {
 		// this is an insert
+		log.Println("This is an insert")
 		spl := strings.SplitN(str, "=", 2)
 		log.Println("Split into", spl)
 		dict[spl[0]] = dict[spl[1]]
 	} else {
 		// this is a retrieve
+		log.Println("This is a query")
 		if val, ok := dict[str]; ok {
 			// it's in, respond the value
 			server.WriteTo([]byte(fmt.Sprintf("%s=%s", str, val)), addr)
