@@ -63,7 +63,8 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 }
 
 func ListenServer(ip string, port int) (err error) {
-	var dict map[string]string
+	dict := make(map[string]string)
+
 	// server, err := net.Listen("udp", fmt.Sprintf("%s:%d", ip, port))
 	server, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
