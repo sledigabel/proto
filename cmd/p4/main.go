@@ -55,7 +55,7 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		dict[spl[0]] = dict[spl[1]]
 	} else {
 		// this is a retrieve
-		log.Println("This is a query")
+		log.Println("This is a query", dict)
 		if val, ok := dict[str]; ok {
 			// it's in, respond the value
 			server.WriteTo([]byte(fmt.Sprintf("%s=%s", str, val)), addr)
