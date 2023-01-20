@@ -58,7 +58,11 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		log.Println("This is a query", dict)
 		if val, ok := dict[str]; ok {
 			// it's in, respond the value
+			log.Println("Value:", val)
 			server.WriteTo([]byte(fmt.Sprintf("%s=%s", str, val)), addr)
+		} else {
+			// not found
+			log.Println("Not found")
 		}
 	}
 	return nil
