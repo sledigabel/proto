@@ -51,7 +51,8 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		// this is an insert
 		log.Println("This is an insert")
 		spl := strings.SplitN(str, "=", 2)
-		log.Println("Split into", spl)
+		// log.Println("Split into")
+		log.Printf("Split into '%s' and '%s'\n", spl[0], spl[1])
 		dict[spl[0]] = spl[1]
 	} else {
 		// this is a retrieve
