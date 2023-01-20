@@ -64,8 +64,8 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		} else {
 			// not found
 			log.Println("Not found")
-			for k, v := range dict {
-				log.Println(k, v)
+			for k := range dict {
+				log.Println([]byte(k), []byte(str))
 			}
 		}
 	}
