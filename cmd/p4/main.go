@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -46,7 +47,8 @@ func HandleRequest(conn net.Conn) error {
 
 func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[string]string) error {
 	log.Println("Received:", string(buf))
-	str := string(buf)
+	str := string(bytes.Trim(buf, "\x00"))
+	// str := string(buf)
 	if strings.ContainsRune(str, '=') {
 		// this is an insert
 		log.Println("This is an insert")
@@ -65,7 +67,6 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 			// not found
 			log.Println("Not found")
 			for k := range dict {
-				log.Println([]byte(k), []byte(str))
 			}
 		}
 	}
