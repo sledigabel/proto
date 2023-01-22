@@ -55,8 +55,11 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		spl := strings.SplitN(str, "=", 2)
 		// log.Println("Split into")
 		log.Printf("Split into '%s' and '%s'\n", spl[0], spl[1])
-		dict[spl[0]] = spl[1]
-	} else {
+		if spl[0] != "version" {
+			dict[spl[0]] = spl[1]
+		} else {
+			log.Printf("Tried to override version with %s\n", spl[1])
+		}
 		// this is a retrieve
 		log.Printf("This is a query for '%s'", str)
 		if val, ok := dict[str]; ok {
@@ -73,6 +76,7 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 
 func ListenServer(ip string, port int) (err error) {
 	dict := make(map[string]string)
+	dict["version"] = "1.0"
 
 	// server, err := net.Listen("udp", fmt.Sprintf("%s:%d", ip, port))
 	server, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", ip, port))
