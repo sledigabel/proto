@@ -58,6 +58,7 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		if spl[0] != "version" {
 			dict[spl[0]] = spl[1]
 		}
+	} else {
 		// this is a retrieve
 		log.Printf("This is a query for '%s'\n", str)
 		log.Println("dict = ", dict)
