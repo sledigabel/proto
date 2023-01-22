@@ -55,10 +55,8 @@ func HandleResponse(server net.PacketConn, buf []byte, addr net.Addr, dict map[s
 		spl := strings.SplitN(str, "=", 2)
 		// log.Println("Split into")
 		log.Printf("Split into '%s' and '%s'\n", spl[0], spl[1])
-		if spl[0] != "version" {
+		if spl[0] == "version" {
 			dict[spl[0]] = spl[1]
-		} else {
-			log.Printf("Tried to override version with %s\n", spl[1])
 		}
 		// this is a retrieve
 		log.Printf("This is a query for '%s'", str)
