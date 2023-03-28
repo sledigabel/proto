@@ -42,111 +42,46 @@ func parseIPAndPort(arg string) (string, int, error) {
 	}
 }
 
-const validUsernameChars string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+type Connection struct {
+	InputConn  net.Conn
+	OutputConn net.Conn
+}
 
-func validateUsername(username string) bool {
-	if len(username) == 0 || len(username) >= 16 {
-		return false
-	}
-	for _, c := range username {
-		if !strings.ContainsRune(validUsernameChars, c) {
-			return false
+func HandleRequest(conn *Connection) {
+	// initiating the connection to chat.protohackers.com
+	conn.OutputConn, _ = net.Dial("tcp", "chat.protohackers.com:16963")
+	defer conn.OutputConn.Close()
+	defer conn.InputConn.Close()
+
+	// anything received by the server is forwarded to the client
+	go func() {
+		var err error
+		for err == nil {
+			newReader := bufio.NewReader(conn.OutputConn)
+			newWriter := bufio.NewWriter(conn.InputConn)
+			_, err = newWriter.ReadFrom(newReader)
 		}
-	}
-	return true
-}
+	}()
 
-func validateMessage(message string) bool {
-	if len(message) == 0 || len(message) >= 1000 {
-		return false
-	}
-	return true
-}
-
-type User struct {
-	Conn net.Conn
-	Name string
-}
-
-func (u *User) WriteMessage(s string) error {
-	_, err := u.Conn.Write([]byte(s))
-	return err
-}
-
-type Room struct {
-	Users []*User
-}
-
-func (r *Room) SendMessageFrom(user *User, message string) error {
-	newMessage := replaceBoguscoin(message)
-	for _, u := range r.Users {
-		if u != user {
-			u.WriteMessage(fmt.Sprintf("[%s] %s\n", user.Name, newMessage))
+	// anything sent by the client is forwarded to the server
+	go func() {
+		// checks the string from the InputConn
+		scanner := bufio.NewScanner(conn.InputConn)
+		scanner.Split(bufio.ScanLines)
+		var err error
+		for scanner.Scan() {
+			message := scanner.Text()
+			// replace with Bogus
+			message = replaceBoguscoin(message)
+			_, err = conn.OutputConn.Write([]byte(message))
+			if err != nil {
+				log.Panic(err)
+			}
 		}
-	}
-	return nil
-}
-
-func (r *Room) AddUser(user *User) {
-	log.Println("New user joining", user.Name)
-	var userList []string
-
-	log.Println("Broadcasting")
-	for _, u := range r.Users {
-		userList = append(userList, u.Name)
-		u.WriteMessage(fmt.Sprintf("* %s has entered the room\n", user.Name))
-	}
-	user.WriteMessage(fmt.Sprintf("* The room contains: %s\n", strings.Join(userList, ", ")))
-	r.Users = append(r.Users, user)
-}
-
-func (r *Room) NotifyUserLeave(user *User) {
-	var newUserList []*User
-	for _, u := range r.Users {
-		if u != user {
-			newUserList = append(newUserList, u)
-			u.WriteMessage(fmt.Sprintf("* %s has left the room\n", user.Name))
-		}
-	}
-	r.Users = newUserList
-}
-
-func HandleRequest(user *User, room *Room) error {
-	log.Println("New connection, prompting for username")
-
-	scanner := bufio.NewScanner(user.Conn)
-	scanner.Split(bufio.ScanLines)
-	// ask for name
-	user.WriteMessage("Welcome to budgetchat! What shall I call you?\n")
-	if scanner.Scan() {
-		username := scanner.Text()
-		log.Println("Scanned user:", username)
-		if !validateUsername(username) {
-			log.Println("Non valid username")
-			user.WriteMessage("Invalid username")
-			user.Conn.Close()
-		}
-		user.Name = username
-	} else {
-		return errors.New("could not get username")
-	}
-
-	// user accepted, make the announcement
-	room.AddUser(user)
-	defer room.NotifyUserLeave(user)
-
-	// then loop on all input
-	for scanner.Scan() {
-		message := scanner.Text()
-		if validateMessage(message) {
-			room.SendMessageFrom(user, message)
-		}
-	}
-	return nil
+	}()
 }
 
 func ListenServer(ip string, port int) (err error) {
-	var room Room
 	server, err := net.Listen("tcp", fmt.Sprintf("%s:%d", ip, port))
 	if err != nil {
 		return err
@@ -154,12 +89,12 @@ func ListenServer(ip string, port int) (err error) {
 	log.Println("Listening on", ip, "port", port)
 	defer server.Close()
 	for {
-		conn, err := server.Accept()
-		user := User{Conn: conn}
+		var conn Connection
+		conn.InputConn, err = server.Accept()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		go HandleRequest(&user, &room)
+		go HandleRequest(&conn)
 	}
 }
 
