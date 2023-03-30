@@ -43,42 +43,52 @@ func parseIPAndPort(arg string) (string, int, error) {
 }
 
 type Connection struct {
-	InputConn  net.Conn
-	OutputConn net.Conn
+	ClientConn net.Conn
+	ProtoConn  net.Conn
 }
 
 func HandleRequest(conn *Connection) {
 	// initiating the connection to chat.protohackers.com
-	conn.OutputConn, _ = net.Dial("tcp", "chat.protohackers.com:16963")
-	defer conn.OutputConn.Close()
-	defer conn.InputConn.Close()
+	conn.ProtoConn, _ = net.Dial("tcp", "chat.protohackers.com:16963")
+
+	defer conn.ProtoConn.Close()
+	defer conn.ClientConn.Close()
+	log.Printf("New connection from %s", conn.ProtoConn.RemoteAddr())
 
 	// anything received by the server is forwarded to the client
 	go func() {
-		var err error
-		for err == nil {
-			newReader := bufio.NewReader(conn.OutputConn)
-			newWriter := bufio.NewWriter(conn.InputConn)
-			_, err = newWriter.ReadFrom(newReader)
+		scanner := bufio.NewScanner(conn.ProtoConn)
+		scanner.Split(bufio.ScanLines)
+
+		for scanner.Scan() {
+			message := fmt.Sprintf("%s\n", scanner.Text())
+			log.Println("received from server:", message)
+			b, err := conn.ClientConn.Write([]byte(message))
+			if err != nil {
+				log.Panic(err)
+			} else {
+				log.Printf("sent %d bytes to client", b)
+			}
 		}
+		log.Println("Closing server -> client loop")
 	}()
 
 	// anything sent by the client is forwarded to the server
-	go func() {
-		// checks the string from the InputConn
-		scanner := bufio.NewScanner(conn.InputConn)
-		scanner.Split(bufio.ScanLines)
-		var err error
-		for scanner.Scan() {
-			message := scanner.Text()
-			// replace with Bogus
-			message = replaceBoguscoin(message)
-			_, err = conn.OutputConn.Write([]byte(message))
-			if err != nil {
-				log.Panic(err)
-			}
+	// checks the string from the ClientConn
+	scanner := bufio.NewScanner(conn.ClientConn)
+	scanner.Split(bufio.ScanLines)
+	var err error
+	for scanner.Scan() {
+		message := fmt.Sprintf("%s\n", scanner.Text())
+		log.Println("received from client:", message)
+		// replace with Bogus
+		message = replaceBoguscoin(message)
+		_, err = conn.ProtoConn.Write([]byte(message))
+		if err != nil {
+			log.Panic(err)
 		}
-	}()
+	}
+	log.Println("Client disconnected")
 }
 
 func ListenServer(ip string, port int) (err error) {
@@ -90,7 +100,7 @@ func ListenServer(ip string, port int) (err error) {
 	defer server.Close()
 	for {
 		var conn Connection
-		conn.InputConn, err = server.Accept()
+		conn.ClientConn, err = server.Accept()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -109,6 +119,7 @@ func main() {
 		usage()
 		os.Exit(1)
 	}
+
 	// fmt.Println(ip, port)
 	log.Println("Starting server")
 	if err := ListenServer(ip, port); err != nil {
